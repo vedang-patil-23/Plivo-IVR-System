@@ -32,15 +32,12 @@ Follow these steps to get the demo up and running on your local machine.
 First, clone the repository and set up your Python environment.
 
 ```bash
-# Clone the project
 git clone <your-repo-url>
 cd <your-repo-directory>
 
-# Create and activate a virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Install the required dependencies
 pip install -r requirements.txt
 ```
 
