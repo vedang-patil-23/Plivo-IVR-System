@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def health_check():
-    return "IVR app running."
+    return "IVR app is running."
 
 @app.route('/ivr/', methods=['GET', 'POST'])
 def main_menu():
@@ -42,7 +42,7 @@ def handle_language_selection():
     digit = request.form.get('Digits')
     response = plivo.Response()
 
-    if digit == '1':  # English
+    if digit == '1':  # Eng
         get_input = plivo.GetInput(
             action=f'{BASE_URL}/ivr/menu2?language=en',
             method='POST',
@@ -56,7 +56,7 @@ def handle_language_selection():
         response.add(plivo.Speak("We did not receive an input. Redirecting to the main menu."))
         response.add(plivo.Redirect(f'{BASE_URL}/ivr/'))
 
-    elif digit == '2':  # Spanish
+    elif digit == '2':  # Esp
         get_input = plivo.GetInput(
             action=f'{BASE_URL}/ivr/menu2?language=es',
             method='POST',
@@ -96,7 +96,7 @@ def handle_action_selection():
 
     elif digit == '2':
         if language == 'es':
-            response.add(plivo.Speak("Conectando con un asociado. Espere por favor.", language="es-ES"))
+            response.add(plivo.Speak("Conectándote con un asesor. Por favor, espera.", language="es-ES"))
         else:
             response.add(plivo.Speak("Connecting you to an associate. Please wait."))
         
@@ -104,7 +104,7 @@ def handle_action_selection():
 
     else:
         if language == 'es':
-            response.add(plivo.Speak("Entrada inválida. Por favor, inténtelo de nuevo.", language="es-ES"))
+            response.add(plivo.Speak("Entrada no válida. Inténtelo de nuevo.", language="es-ES"))
         else:
             response.add(plivo.Speak("Invalid input. Please try again."))
         
