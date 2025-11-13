@@ -1,4 +1,4 @@
-# InspireWorks - Plivo IVR Demo
+# Plivo Project - InspireWorks IVR Demo
 
 The application makes an outbound call and presents the recipient with a multi-level phone menu for a simulated customer support line. The project is a Demo IVR System using Plivo API.
 
