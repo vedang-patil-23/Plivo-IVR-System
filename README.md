@@ -71,10 +71,10 @@ BASE_URL = "https://<your-ngrok-url>.ngrok.io"
 
 Plivo's cloud platform needs a public URL to communicate with your local Flask server.
 
-In a new terminal window, start `ngrok` to create a secure tunnel to your local port 5000.
+In a new terminal window, start `ngrok` to create a secure tunnel to your local port 5555.
 
 ```bash
-ngrok http 5000
+ngrok http 5555
 ```
 
 `ngrok` will provide a public "Forwarding" URL. **Copy the HTTPS URL** and paste it as the `BASE_URL` value in your `config.txt` file.
