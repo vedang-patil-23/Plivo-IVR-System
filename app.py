@@ -1,6 +1,6 @@
 import flask
-from flask import Flask, request, Response
-import plivo
+from flask import Flask, request
+from flask import make_response as FlaskResponse
 from config import PLIVO_AUTH_ID, PLIVO_AUTH_TOKEN, ASSOCIATE_NUMBER, BASE_URL
 
 app = Flask(__name__)
@@ -11,111 +11,101 @@ def health_check():
 
 @app.route('/ivr/', methods=['GET', 'POST'])
 def main_menu():
-    """Serves the initial language selection menu."""
-    response = plivo.Response()
-    
-    get_input = plivo.GetInput(
-        action=f'{BASE_URL}/ivr/menu1',
-        method='POST',
-        input_type='dtmf',
-        num_digits=1,
-        retries=3,
-        timeout=5
-    )
-    
     speak_body_en = "Hello, and thank you for calling. Press 1 for English."
     speak_body_es = "Presione dos para español."
     
-    response.add(plivo.Speak(speak_body_en))
-    response.add(plivo.Speak(speak_body_es, language="es-ES"))
+    xml_response = f"""
+    <Response>
+        <GetInput action="{BASE_URL}/ivr/menu1" method="POST" input_type="dtmf" num_digits="1" retries="3" timeout="5">
+            <Speak>{speak_body_en}</Speak>
+            <Speak language="es-ES">{speak_body_es}</Speak>
+        </GetInput>
+        <Speak>We did not receive an input. Goodbye.</Speak>
+        <Hangup/>
+    </Response>
+    """
     
-    get_input.add(response)
-
-    fallback_response = plivo.Response()
-    fallback_response.add(plivo.Speak("We did not receive an input. Goodbye."))
-    
-    return Response(str(fallback_response), mimetype='text/xml')
+    response = FlaskResponse(xml_response)
+    response.headers['Content-Type'] = 'text/xml'
+    return response
 
 @app.route('/ivr/menu1', methods=['GET', 'POST'])
 def handle_language_selection():
-    """Handles language selection and serves the action menu."""
     digit = request.form.get('Digits')
-    response = plivo.Response()
-
+    
     if digit == '1':  # Eng
-        get_input = plivo.GetInput(
-            action=f'{BASE_URL}/ivr/menu2?language=en',
-            method='POST',
-            input_type='dtmf',
-            num_digits=1,
-            retries=3,
-            timeout=5
-        )
-        get_input.add(plivo.Speak("Press 1 to play a short audio message. Press 2 to connect to a live associate."))
-        response.add(get_input)
-        response.add(plivo.Speak("We did not receive an input. Redirecting to the main menu."))
-        response.add(plivo.Redirect(f'{BASE_URL}/ivr/'))
+        xml_response = f"""
+        <Response>
+            <GetInput action="{BASE_URL}/ivr/menu2?language=en" method="POST" input_type="dtmf" num_digits="1" retries="3" timeout="5">
+                <Speak>Press 1 to play a short audio message. Press 2 to connect to a live associate.</Speak>
+            </GetInput>
+            <Speak>We did not receive an input. Redirecting to the main menu.</Speak>
+            <Redirect>{BASE_URL}/ivr/</Redirect>
+        </Response>
+        """
 
     elif digit == '2':  # Esp
-        get_input = plivo.GetInput(
-            action=f'{BASE_URL}/ivr/menu2?language=es',
-            method='POST',
-            input_type='dtmf',
-            num_digits=1,
-            retries=3,
-            timeout=5
-        )
         speak_body = "Presione 1 para reproducir un mensaje de audio corto. Presione 2 para conectarse con un asociado en vivo."
-        get_input.add(plivo.Speak(speak_body, language="es-ES"))
-        response.add(get_input)
-        response.add(plivo.Speak("No recibimos una entrada. Redirigiendo al menú principal.", language="es-ES"))
-        response.add(plivo.Redirect(f'{BASE_URL}/ivr/'))
+        xml_response = f"""
+        <Response>
+            <GetInput action="{BASE_URL}/ivr/menu2?language=es" method="POST" input_type="dtmf" num_digits="1" retries="3" timeout="5">
+                <Speak language="es-ES">{speak_body}</Speak>
+            </GetInput>
+            <Speak language="es-ES">No recibimos una entrada. Redirigiendo al menú principal.</Speak>
+            <Redirect>{BASE_URL}/ivr/</Redirect>
+        </Response>
+        """
         
     else:
-        response.add(plivo.Speak("Invalid input. Please try again."))
-        response.add(plivo.Redirect(f'{BASE_URL}/ivr/'))
+        xml_response = f"""
+        <Response>
+            <Speak>Invalid input. Please try again.</Speak>
+            <Redirect>{BASE_URL}/ivr/</Redirect>
+        </Response>
+        """
 
-    return Response(str(response), mimetype='text/xml')
+    response = FlaskResponse(xml_response)
+    response.headers['Content-Type'] = 'text/xml'
+    return response
 
 
 @app.route('/ivr/menu2', methods=['GET', 'POST'])
 def handle_action_selection():
-    """Handles the final action: play audio or dial."""
     digit = request.form.get('Digits')
     language = request.args.get('language', 'en')
-    response = plivo.Response()
-
+    
     if digit == '1':
-        if language == 'es':
-            response.add(plivo.Speak("Reproduciendo el mensaje.", language="es-ES"))
-        else:
-            response.add(plivo.Speak("Playing the message."))
-        
-        response.add(plivo.Play("https://s3.amazonaws.com/plivocloud/Trumpet.mp3"))
-        response.add(plivo.Hangup())
+        speak_text = "Reproduciendo el mensaje." if language == 'es' else "Playing the message."
+        xml_response = f"""
+        <Response>
+            <Speak language="{language}-{'ES' if language == 'es' else 'EN'}">{speak_text}</Speak>
+            <Play>https://s3.amazonaws.com/plivocloud/Trumpet.mp3</Play>
+            <Hangup/>
+        </Response>
+        """
 
     elif digit == '2':
-        if language == 'es':
-            response.add(plivo.Speak("Conectándote con un asesor. Por favor, espera.", language="es-ES"))
-        else:
-            response.add(plivo.Speak("Connecting you to an associate. Please wait."))
-        
-        response.add(plivo.Dial(ASSOCIATE_NUMBER))
+        speak_text = "Conectándote con un asesor. Por favor, espera." if language == 'es' else "Connecting you to an associate. Please wait."
+        xml_response = f"""
+        <Response>
+            <Speak language="{language}-{'ES' if language == 'es' else 'EN'}">{speak_text}</Speak>
+            <Dial>{ASSOCIATE_NUMBER}</Dial>
+        </Response>
+        """
 
     else:
-        if language == 'es':
-            response.add(plivo.Speak("Entrada no válida. Inténtelo de nuevo.", language="es-ES"))
-        else:
-            response.add(plivo.Speak("Invalid input. Please try again."))
-        
-        if language == 'es':
-             response.add(plivo.Redirect(f'{BASE_URL}/ivr/menu1?Digits=2'))
-        else:
-             response.add(plivo.Redirect(f'{BASE_URL}/ivr/menu1?Digits=1'))
+        speak_text = "Entrada no válida. Inténtelo de nuevo." if language == 'es' else "Invalid input. Please try again."
+        redirect_url_param = 2 if language == 'es' else 1
+        xml_response = f"""
+        <Response>
+            <Speak language="{language}-{'ES' if language == 'es' else 'EN'}">{speak_text}</Speak>
+            <Redirect>{BASE_URL}/ivr/menu1?Digits={redirect_url_param}</Redirect>
+        </Response>
+        """
 
-
-    return Response(str(response), mimetype='text/xml')
+    response = FlaskResponse(xml_response)
+    response.headers['Content-Type'] = 'text/xml'
+    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555)
-
