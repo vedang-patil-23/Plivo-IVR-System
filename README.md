@@ -111,3 +111,7 @@ python make_call.py
 ```
 
 The script will confirm that the call was initiated. The `TO_NUMBER` you configured will receive a call shortly.
+
+## License
+
+Licensed under WTFPL Lincense.
