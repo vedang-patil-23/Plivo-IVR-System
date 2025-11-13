@@ -1,0 +1,16 @@
+# Plivo credentials - replace with your actual credentials
+PLIVO_AUTH_ID = "YOUR_PLIVO_AUTH_ID"
+PLIVO_AUTH_TOKEN = "YOUR_PLIVO_AUTH_TOKEN"
+
+# Your Plivo phone number or a verified number for outbound calls (in E.164 format)
+PLIVO_NUMBER = "YOUR_PLIVO_NUMBER"
+
+# The destination number to call (in E.164 format)
+TO_NUMBER = "DESTINATION_NUMBER_TO_CALL"
+
+# The number to forward the call to (live associate)
+ASSOCIATE_NUMBER = "ASSOCIATE_PLACEHOLDER_NUMBER"
+
+# The base URL of your web application (e.g., from ngrok)
+# Example: "https://<your-ngrok-id>.ngrok.io"
+BASE_URL = "YOUR_PUBLICLY_ACCESSIBLE_URL"
